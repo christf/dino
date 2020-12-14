@@ -53,6 +53,8 @@ SOURCES
     src/service/search_processor.vala
     src/service/stream_interactor.vala
     src/service/util.vala
+    src/service/mam_manager.vala
+
 
     src/util/display_name.vala
     src/util/util.vala
