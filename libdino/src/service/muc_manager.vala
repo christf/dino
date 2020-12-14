@@ -103,8 +103,9 @@ public class MucManager : StreamInteractionModule, Object {
         if (!mucs_todo.has_key(account) || !mucs_todo[account].contains(jid)) return;
 
         mucs_todo[account].remove(jid);
+		stream_interactor.get_module(MamManager.IDENTITY).do_mam_cancel(jid.to_string());
 
-        XmppStream? stream = stream_interactor.get_stream(account);
+		XmppStream? stream = stream_interactor.get_stream(account);
         if (stream == null) return;
         unset_autojoin(account, stream, jid);
         stream.get_module(Xep.Muc.Module.IDENTITY).exit(stream, jid.bare_jid);
