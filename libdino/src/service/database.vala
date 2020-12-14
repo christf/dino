@@ -7,7 +7,7 @@ using Dino.Entities;
 namespace Dino {
 
 public class Database : Qlite.Database {
-    private const int VERSION = 21;
+    private const int VERSION = 22;
 
     public class AccountTable : Table {
         public Column<int> id = new Column.Integer("id") { primary_key = true, auto_increment = true };
@@ -262,6 +262,19 @@ public class Database : Qlite.Database {
         }
     }
 
+    public class BetterMamTable : Table {
+        public Column<int> id = new Column.Integer("id") { primary_key = true, auto_increment = true };
+        public Column<int> account_id = new Column.Integer("account_id") { not_null = true };
+        public Column<string> archive_jid = new Column.Text("archive_jid") { not_null = true };
+        public Column<long> time = new Column.Long("time") { not_null = true };
+
+        internal BetterMamTable(Database db) {
+            base(db, "better_mam_catchup");
+            init({id, account_id, archive_jid, time});
+            unique({account_id, archive_jid});
+        }
+    }
+
     public class SettingsTable : Table {
         public Column<int> id = new Column.Integer("id") { primary_key = true, auto_increment = true };
         public Column<string> key = new Column.Text("key") { unique = true, not_null = true };
@@ -303,6 +316,7 @@ public class Database : Qlite.Database {
     public MamCatchupTable mam_catchup { get; private set; }
     public SettingsTable settings { get; private set; }
     public ConversationSettingsTable conversation_settings { get; private set; }
+    public BetterMamTable better_mam { get; private set; }
 
     public Map<int, Jid> jid_table_cache = new HashMap<int, Jid>();
     public Map<Jid, int> jid_table_reverse = new HashMap<Jid, int>(Jid.hash_func, Jid.equals_func);
@@ -327,8 +341,8 @@ public class Database : Qlite.Database {
         mam_catchup = new MamCatchupTable(this);
         settings = new SettingsTable(this);
         conversation_settings = new ConversationSettingsTable(this);
-        init({ account, jid, entity, content_item, message, message_correction, real_jid, file_transfer, call, conversation, avatar, entity_identity, entity_feature, roster, mam_catchup, settings, conversation_settings });
-
+        better_mam = new BetterMamTable(this);
+        init({ account, jid, entity, content_item, message, message_correction, real_jid, file_transfer, call, conversation, avatar, entity_identity, entity_feature, roster, mam_catchup, settings, conversation_settings, better_mam });
         try {
             exec("PRAGMA journal_mode = WAL");
             exec("PRAGMA synchronous = NORMAL");
@@ -446,6 +460,13 @@ public class Database : Qlite.Database {
                 error("Failed to upgrade to database version 18: %s", e.message);
             }
         }
+        if (oldVersion < 22) {
+            try {
+                better_mam.create_table_at_version(22);
+            } catch (Error e) {
+               error("Failed to upgrade to database version 18: %s", e.message);
+	    }
+	}
     }
 
     public ArrayList<Account> get_accounts() {
