@@ -74,29 +74,14 @@ public class Dino.Ui.Application : Gtk.Application, Dino.Application {
             }
             window.present();
         });
-        SyncDialog dialog = new SyncDialog(stream_interactor);
-        MamManager mm = stream_interactor.get_module(MamManager.IDENTITY);
-        int inflight = 0;
-        mm.mam_start.connect((account, jid, query_id) => {
-        inflight += 1;
-        dialog.set_remaining(inflight);
-        if (!dialog.visible) {
-        dialog.set_transient_for(window);
-        dialog.show_all();
-        dialog.present();
-        }
-        });
-        mm.mam_stop.connect((account, jid, query_id) => {
-        inflight -= 1;
-        dialog.set_remaining(inflight);
-        if (mm.num_inflight() == 0) {
-        dialog.hide();
-        }
-        });
+		SyncDialog dialog = new SyncDialog(stream_interactor);
+		MamManager mm = stream_interactor.get_module(MamManager.IDENTITY);
+		mm.mam_start.connect(dialog.on_mam_start);
+		mm.mam_stop.connect(dialog.on_mam_stop);
+		mm.mam_time.connect(dialog.on_mam_time);
+	}
 
-    }
-
-    public void handle_uri(string jid, string query, Gee.Map<string, string> options) {
+	public void handle_uri(string jid, string query, Gee.Map<string, string> options) {
         switch (query) {
             case "join":
                 show_join_muc_dialog(null, jid);
