@@ -13,16 +13,18 @@ public class ConversationView : Box, Plugins.ConversationItemCollection, Plugins
     public signal void on_quote_text(string nick, string text);
     public Conversation? conversation { get; private set; }
 
-    [GtkChild] public unowned ScrolledWindow scrolled;
-    [GtkChild] private unowned Revealer notification_revealer;
-    [GtkChild] private unowned Box message_menu_box;
-    [GtkChild] private unowned Button button1;
-    [GtkChild] private unowned Image button1_icon;
-    [GtkChild] private unowned Box notifications;
-    [GtkChild] private unowned Box main;
-    [GtkChild] private unowned EventBox main_event_box;
-    [GtkChild] private unowned EventBox main_wrap_event_box;
-    [GtkChild] private unowned Stack stack;
+    [GtkChild] public ScrolledWindow scrolled;
+    [GtkChild] private Revealer notification_revealer;
+    [GtkChild] private Box message_menu_box;
+    [GtkChild] private Button button1;
+    [GtkChild] private Image button1_icon;
+    [GtkChild] private Button button2;
+    [GtkChild] private Image button2_icon;
+    [GtkChild] private Box notifications;
+    [GtkChild] private Box main;
+    [GtkChild] private EventBox main_event_box;
+    [GtkChild] private EventBox main_wrap_event_box;
+    [GtkChild] private Stack stack;
 
     private StreamInteractor stream_interactor;
     private Gee.TreeSet<Plugins.MetaConversationItem> content_items = new Gee.TreeSet<Plugins.MetaConversationItem>(compare_meta_items);
@@ -81,8 +83,12 @@ public class ConversationView : Box, Plugins.ConversationItemCollection, Plugins
         main_event_box.motion_notify_event.connect(on_motion_notify_event);
 
         button1.clicked.connect(() => {
-            current_meta_item.get_item_actions(Plugins.WidgetType.GTK)[0].callback(button1, current_meta_item, currently_highlighted.widget);
+            current_meta_item.get_item_actions(Plugins.WidgetType.GTK)[1].callback(button1, current_meta_item, currently_highlighted.widget);
             update_message_menu();
+        });
+
+        button2.clicked.connect(() => {
+            current_meta_item.get_item_actions(Plugins.WidgetType.GTK)[0].callback(button2, current_meta_item, currently_highlighted.widget);
         });
 
         return this;
@@ -190,9 +196,14 @@ public class ConversationView : Box, Plugins.ConversationItemCollection, Plugins
 
         var actions = current_meta_item.get_item_actions(Plugins.WidgetType.GTK);
         message_menu_box.visible = actions != null && actions.size > 0;
+
         if (actions != null && actions.size == 1) {
+            button1.visible = false;
+        }
+
+        if (actions != null && actions.size == 2) {
             button1.visible = true;
-            button1_icon.set_from_icon_name(actions[0].icon_name, IconSize.SMALL_TOOLBAR);
+            button1_icon.set_from_icon_name(actions[1].icon_name, IconSize.SMALL_TOOLBAR);
         }
     }
 
